@@ -24,30 +24,62 @@ if (!defined ("NAQ_Plugin_DIR")) {
  function NAQ_plugin_scripts() {
         wp_enqueue_style('main-style', NAQ_Plugin_DIR . 'assets/css/style.css');
         wp_enqueue_script('main-script', NAQ_Plugin_DIR . 'assets/js/main.js');
-    }
+       // Enqueue the AJAX JavaScript file
+    wp_enqueue_script('Ajax-javascript', NAQ_Plugin_DIR . 'assets/js/ajax.js', array('jquery'), null, true);
+    
+    // Localize the script to pass the AJAX URL
+    wp_localize_script('Ajax-javascript', 'NAQ_ajax_url', 
+        array(
+            'ajax_url' => admin_url('admin-ajax.php'),
+        )
+    );
+}
     add_action('wp_enqueue_scripts', 'NAQ_plugin_scripts');
 
     require plugin_dir_path(__FILE__) .'inc/settings.php';
+    require plugin_dir_path(__FILE__) .'inc/db.php';
 
-    function NAQ_likes_table() {
-        global $wpdb;
-        $table_name = $wpdb->prefix . "NAQ_like_system"; 
-        $charset_collate = $wpdb->get_charset_collate();
+
+    
+    // creating like and dislike buttons
+    function NAQ_like_dislike_button($content) {
+        // Retrieve button labels from options, with defaults of 'Like' and 'Dislike'
+        $like_btn_label = get_option('NAQ_like_btn_label', 'Like');
+        $dislike_btn_label = get_option('NAQ_dislike_btn_label', 'Dislike');
+    
+        // Get logged-in user ID
+        $user_id = get_current_user_id();
         
-        $sql = "CREATE TABLE IF NOT EXISTS $table_name (
-          id mediumint(9) NOT NULL AUTO_INCREMENT,
-          time timestamp DEFAULT CURRENT_TIMESTAMP NOT NULL,
-          user_id mediumint(9) NOT NULL,
-          post_id mediumint(9) NOT NULL,
-          like_count mediumint(9) NOT NULL,
-          dislike_count mediumint(9) NOT NULL,
-          PRIMARY KEY  (id)
-        ) $charset_collate;";
+        // Get post ID
+        $post_id = get_the_ID();
+    
+        // Check if user ID and post ID are valid before proceeding
+        if ($user_id && $post_id) {
+            // Create the button container and buttons using the retrieved labels
+            $like_btn_wrap = '<div class="NAQ_buttons_container">';
+            $like_btn = '<a href="javascript:void(0);" onclick="NAQ_like_btn_ajax(' . esc_attr($post_id) . ', ' . esc_attr($user_id) . ')" class="NAQ_btn like-btn">' . esc_html($like_btn_label) . '</a>';
+            $dislike_btn = '<a href="javascript:void(0);" class="NAQ_btn dislike-btn">' . esc_html($dislike_btn_label) . '</a>';
+            $like_btn_wrap_end = '</div>';
+            
+            // For response
+            $NAQ_ajax_response = '<div id="NAQAjaxResponse" class="NAQ-ajax-response"><span></span></div>';
+            
+            // Append the buttons to the content
+            $content .= $like_btn_wrap . $like_btn . $dislike_btn . $like_btn_wrap_end . $NAQ_ajax_response;
+        }
         
-        require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
-        dbDelta($sql);
+        return $content;
     }
+    add_filter('the_content', 'NAQ_like_dislike_button');
     
-    register_activation_hook(__FILE__, 'NAQ_likes_table');
-    
+// NAQ plugin Ajax function
+function NAQ_like_btn_ajax_action() {
+    echo 'ajax success';
+    wp_die(); // This function is used to properly terminate the AJAX request
+}
+
+// Use wp_ajax with your function name
+add_action('wp_ajax_NAQ_like_btn_ajax_action', 'NAQ_like_btn_ajax_action');
+add_action('wp_ajax_nopriv_NAQ_like_btn_ajax_action', 'NAQ_like_btn_ajax_action');
+
 ?>

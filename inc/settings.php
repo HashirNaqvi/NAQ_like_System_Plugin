@@ -15,7 +15,7 @@ function NAQ_settings_page_html() {
             ?>
         </form>
      </div>
-    // <?php
+    <?php
 }
 
 function NAQ_submenu_page_html() {
@@ -35,36 +35,15 @@ add_action('admin_menu', 'NAQ_register_menu_page');
 
 function NAQ_plugin_settings() {
     // Register settings
-
-    // register_setting(option_group, option_name);
-    //parameters of register_setting 
-    //option_group: string
-    //option_name: string
     register_setting('NAQ_settings', 'NAQ_like_btn_label');
     register_setting('NAQ_settings', 'NAQ_dislike_btn_label');
 
     // Add settings section
-
-    //add_settings_section(id, title, callback, page);
-    //parameters of add_settings_section
-    //id: string
-    //title: string
-    // callback function 
-    //page: string
-
     add_settings_section('NAQ_label_settings', 'NAQ Button Labels', 'NAQ_section_cb', 'NAQ_setting');
     
-    // Add settings field
-
-    //add_settings_field(id , title, callback, page , section );
-    //arameters of add_settings_field
-    //id: string
-    //title: string
-    // callback function
-    //page: string
-    // section 
-    add_settings_field('NAQ_like_label_field', 'Like Button Label', 'NAQ_field_cb', 'NAQ_setting', 'NAQ_label_settings');
-    add_settings_field('NAQ_dislike_label_field', 'DisLike Button Label', 'NAQ_field_cb', 'NAQ_setting', 'NAQ_label_settings');
+    // Add settings fields
+    add_settings_field('NAQ_like_label_field', 'Like Button Label', 'NAQ_like_field_cb', 'NAQ_setting', 'NAQ_label_settings');
+    add_settings_field('NAQ_dislike_label_field', 'Dislike Button Label', 'NAQ_dislike_field_cb', 'NAQ_setting', 'NAQ_label_settings');
 }
 
 add_action('admin_init', 'NAQ_plugin_settings');
@@ -73,21 +52,21 @@ function NAQ_section_cb() {
     echo '<p>Define the button labels:</p>';
 }
 
-function NAQ_field_cb() {
+function NAQ_like_field_cb() {
     // Retrieve the stored option from the WordPress database
     $setting = get_option('NAQ_like_btn_label');
     ?>
     <!-- Output of the field -->
-    <input type="text" id="NAQ_like_label_field" name="NAQ_like_label_field" value="<?php echo isset($setting) ? esc_attr($setting) : ''; ?>">
-    <?php
-}
-function NAQ_dislike_field_cb() {
-    // Retrieve the stored option from the WordPress database
-    $setting = get_option('NAQ_like_btn_label');
-    ?>
-    <!-- Output of the field -->
-    <input type="text" id="NAQ_dislike_label_field" name="NAQ_dislike_label_field" value="<?php echo isset($setting) ? esc_attr($setting) : ''; ?>">
+    <input type="text" id="NAQ_like_label_field" name="NAQ_like_btn_label" value="<?php echo isset($setting) ? esc_attr($setting) : ''; ?>">
     <?php
 }
 
+function NAQ_dislike_field_cb() {
+    // Retrieve the stored option from the WordPress database
+    $setting = get_option('NAQ_dislike_btn_label');
+    ?>
+    <!-- Output of the field -->
+    <input type="text" id="NAQ_dislike_label_field" name="NAQ_dislike_btn_label" value="<?php echo isset($setting) ? esc_attr($setting) : ''; ?>">
+    <?php
+}
 ?>

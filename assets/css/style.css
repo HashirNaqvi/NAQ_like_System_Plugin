@@ -1,3 +1,36 @@
-body {
-  background-color: blue;
+/*
+ * 
+ * NAQ like system css
+ * 
+ *
+ */
+
+.NAQ_btn {
+  display: inline;
+  width: 46%;
+  padding: 20px;
+  font-size: 20px;
+  margin: 0 2%;
+  border: 1px solid #3d06e2;
+  border-radius: 15px;
+  background: #f8f8f8;
+  text-align: center;
+  text-transform: uppercase;
+  color: #444444;
+  transition: 0.5s all;
+  text-decoration: none;
+}
+
+.NAQ_btn:hover {
+  text-decoration: none;
+  color: inherit;
+}
+
+.like-btn:hover {
+  background: #049b25;
+  color: aliceblue;
+}
+.dislike-btn:hover {
+  background: #ff0202;
+  color: aliceblue;
 }
