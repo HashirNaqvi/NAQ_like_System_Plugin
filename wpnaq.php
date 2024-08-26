@@ -25,7 +25,7 @@ if (!defined ("NAQ_Plugin_DIR")) {
         wp_enqueue_style('main-style', NAQ_Plugin_DIR . 'assets/css/style.css');
         wp_enqueue_script('main-script', NAQ_Plugin_DIR . 'assets/js/main.js');
        // Enqueue the AJAX JavaScript file
-    wp_enqueue_script('Ajax-javascript', NAQ_Plugin_DIR . 'assets/js/ajax.js', array('jquery'), null, true);
+        wp_enqueue_script('Ajax-javascript', NAQ_Plugin_DIR . 'assets/js/ajax.js', array('jquery'), null, true);
     
     // Localize the script to pass the AJAX URL
     wp_localize_script('Ajax-javascript', 'NAQ_ajax_url', 
@@ -38,48 +38,62 @@ if (!defined ("NAQ_Plugin_DIR")) {
 
     require plugin_dir_path(__FILE__) .'inc/settings.php';
     require plugin_dir_path(__FILE__) .'inc/db.php';
+    require plugin_dir_path(__FILE__) .'inc/btn.php';
+
+  
+    
+
+// Function to handle AJAX request for liking a post
+function NAQ_like_btn_ajax_action() {
+    global $wpdb; // Access the global $wpdb object for database operations
+    
+    // Include the WordPress upgrade functions for database-related operations
+    require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
+    
+    // Define the table name for storing likes, using the WordPress table prefix
+    $table_name = $wpdb->prefix . "NAQ_like_system"; 
 
 
-    
-    // creating like and dislike buttons
-    function NAQ_like_dislike_button($content) {
-        // Retrieve button labels from options, with defaults of 'Like' and 'Dislike'
-        $like_btn_label = get_option('NAQ_like_btn_label', 'Like');
-        $dislike_btn_label = get_option('NAQ_dislike_btn_label', 'Dislike');
-    
-        // Get logged-in user ID
-        $user_id = get_current_user_id();
-        
-        // Get post ID
-        $post_id = get_the_ID();
-    
-        // Check if user ID and post ID are valid before proceeding
-        if ($user_id && $post_id) {
-            // Create the button container and buttons using the retrieved labels
-            $like_btn_wrap = '<div class="NAQ_buttons_container">';
-            $like_btn = '<a href="javascript:void(0);" onclick="NAQ_like_btn_ajax(' . esc_attr($post_id) . ', ' . esc_attr($user_id) . ')" class="NAQ_btn like-btn">' . esc_html($like_btn_label) . '</a>';
-            $dislike_btn = '<a href="javascript:void(0);" class="NAQ_btn dislike-btn">' . esc_html($dislike_btn_label) . '</a>';
-            $like_btn_wrap_end = '</div>';
-            
-            // For response
-            $NAQ_ajax_response = '<div id="NAQAjaxResponse" class="NAQ-ajax-response"><span></span></div>';
-            
-            // Append the buttons to the content
-            $content .= $like_btn_wrap . $like_btn . $dislike_btn . $like_btn_wrap_end . $NAQ_ajax_response;
+    // Check if 'pid' (post ID) and 'uid' (user ID) are set in the POST request
+    if(isset($_POST['pid']) && isset($_POST['uid'])) {
+
+        $post_id =$_POST['pid'];
+        $user_id = $_POST['uid'];
+        $check_like= $wpdb->get_var( "SELECT COUNT(*) FROM $table_name WHERE user_id = '$user_id' AND post_id = '$post_id' AND like_count =1" );
+        if($check_like > 0){
+            echo " Sorry, but you already liked this post!";
+        }
+        else{
+            // Insert the like data into the custom table
+        $wpdb->insert(
+            $table_name, // The name of the table
+            array(
+                'post_id' => intval($_POST['pid']), // Sanitize and assign the post ID
+                'user_id' => intval($_POST['uid']), // Sanitize and assign the user ID
+                'like_count' => 1 // Set the like count to 1
+            ),
+            array(
+                '%d', // Format post_id as integer
+                '%d', // Format user_id as integer
+                '%d'  // Format like_count as integer
+            )
+        );
         }
         
-        return $content;
-    }
-    add_filter('the_content', 'NAQ_like_dislike_button');
+    } 
     
-// NAQ plugin Ajax function
-function NAQ_like_btn_ajax_action() {
-    echo 'ajax success';
-    wp_die(); // This function is used to properly terminate the AJAX request
+    // Display a custom message if the insertion was successful
+    if($wpdb->insert_id) {
+        echo "Thank you for loving this post"; // Typo corrected: "Thanks you" to "Thank you"
+    }
+   
+    wp_die(); // Properly terminate the AJAX request
 }
 
-// Use wp_ajax with your function name
+// Register the AJAX action for logged-in users
 add_action('wp_ajax_NAQ_like_btn_ajax_action', 'NAQ_like_btn_ajax_action');
+// Register the AJAX action for non-logged-in users
 add_action('wp_ajax_nopriv_NAQ_like_btn_ajax_action', 'NAQ_like_btn_ajax_action');
+
 
 ?>
